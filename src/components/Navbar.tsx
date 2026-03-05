@@ -1,11 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Plus, User, Menu, X, Search } from "lucide-react";
+import { ShoppingBag, Plus, User, Menu, X, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, profile, signOut } = useAuth();
 
   const links = [
     { to: "/", label: "Home" },
@@ -45,14 +47,25 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Link to="/profile">
-            <Button variant="outline" size="sm" className="gap-1.5">
-              <User className="h-4 w-4" /> Profile
-            </Button>
-          </Link>
-          <Button size="sm" className="bg-gradient-accent gap-1.5 border-0 text-secondary-foreground">
-            Sign In
-          </Button>
+          {user ? (
+            <>
+              <Link to="/profile">
+                <Button variant="outline" size="sm" className="gap-1.5">
+                  <User className="h-4 w-4" />
+                  {profile?.full_name || "Profile"}
+                </Button>
+              </Link>
+              <Button size="sm" variant="ghost" onClick={signOut} className="gap-1.5">
+                <LogOut className="h-4 w-4" /> Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link to="/auth">
+              <Button size="sm" className="gap-1.5">
+                Sign In
+              </Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -73,11 +86,22 @@ const Navbar = () => {
                 </Button>
               </Link>
             ))}
-            <Link to="/profile" onClick={() => setMobileOpen(false)}>
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <User className="h-4 w-4" /> Profile
-              </Button>
-            </Link>
+            {user ? (
+              <>
+                <Link to="/profile" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" className="w-full justify-start gap-2">
+                    <User className="h-4 w-4" /> Profile
+                  </Button>
+                </Link>
+                <Button variant="ghost" className="w-full justify-start gap-2" onClick={() => { signOut(); setMobileOpen(false); }}>
+                  <LogOut className="h-4 w-4" /> Sign Out
+                </Button>
+              </>
+            ) : (
+              <Link to="/auth" onClick={() => setMobileOpen(false)}>
+                <Button className="w-full justify-start gap-2">Sign In</Button>
+              </Link>
+            )}
           </div>
         </div>
       )}
