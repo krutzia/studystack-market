@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Upload, Sparkles } from "lucide-react";
+import { useState, useRef, useCallback } from "react";
+import { Upload, Sparkles, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,15 +7,63 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const SellItem = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
   const [condition, setCondition] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const validateAndSetImage = (file: File) => {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, or WebP image.", variant: "destructive" });
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      toast({ title: "File too large", description: "Maximum file size is 5MB.", variant: "destructive" });
+      return;
+    }
+    setImageFile(file);
+    const reader = new FileReader();
+    reader.onloadend = () => setImagePreview(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) validateAndSetImage(file);
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) validateAndSetImage(file);
+  }, []);
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleGenerateDescription = () => {
     if (!name || !condition) {
@@ -32,9 +80,61 @@ const SellItem = () => {
     }, 1500);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({ title: "🎉 Item posted successfully!", description: "Your item is now live on the marketplace." });
+
+    if (!user) {
+      toast({ title: "Please sign in to sell items", variant: "destructive" });
+      navigate("/auth");
+      return;
+    }
+
+    if (!name || !price || !category || !condition) {
+      toast({ title: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+
+    setSubmitting(true);
+    let imageUrl: string | null = null;
+
+    try {
+      // Upload image if selected
+      if (imageFile) {
+        const ext = imageFile.name.split(".").pop();
+        const filePath = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+        imageUrl = urlData.publicUrl;
+      }
+
+      // Insert product
+      const { error: insertError } = await supabase.from("products" as any).insert({
+        user_id: user.id,
+        name,
+        description,
+        price: parseFloat(price),
+        original_price: null,
+        category,
+        condition,
+        image_url: imageUrl,
+      } as any);
+
+      if (insertError) throw insertError;
+
+      toast({ title: "🎉 Item posted successfully!", description: "Your item is now live on the marketplace." });
+      navigate("/marketplace");
+    } catch (err: any) {
+      toast({ title: "Error posting item", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -46,12 +146,41 @@ const SellItem = () => {
         {/* Image Upload */}
         <div>
           <Label>Product Image</Label>
-          <div className="mt-2 flex h-40 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed border-border bg-muted/50 transition-colors hover:border-primary/50">
-            <div className="text-center">
-              <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".jpg,.jpeg,.png,.webp"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+          {imagePreview ? (
+            <div className="relative mt-2 overflow-hidden rounded-xl border border-border">
+              <img src={imagePreview} alt="Preview" className="h-56 w-full object-cover" />
+              <button
+                type="button"
+                onClick={removeImage}
+                className="absolute right-2 top-2 rounded-full bg-background/80 p-1.5 text-foreground backdrop-blur-sm hover:bg-background"
+              >
+                <X className="h-4 w-4" />
+              </button>
             </div>
-          </div>
+          ) : (
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+              onDragLeave={() => setDragOver(false)}
+              onDrop={handleDrop}
+              className={`mt-2 flex h-40 cursor-pointer items-center justify-center rounded-xl border-2 border-dashed transition-colors ${
+                dragOver ? "border-primary bg-primary/5" : "border-border bg-muted/50 hover:border-primary/50"
+              }`}
+            >
+              <div className="text-center">
+                <ImageIcon className="mx-auto h-8 w-8 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
+                <p className="text-xs text-muted-foreground">JPG, PNG or WebP (max 5MB)</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -100,8 +229,8 @@ const SellItem = () => {
           <Textarea id="desc" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Describe your item..." className="mt-1.5 min-h-[120px]" />
         </div>
 
-        <Button type="submit" size="lg" className="w-full bg-gradient-accent border-0 text-secondary-foreground text-base">
-          Post Item for Sale
+        <Button type="submit" size="lg" className="w-full bg-gradient-accent border-0 text-secondary-foreground text-base" disabled={submitting}>
+          {submitting ? "Posting..." : "Post Item for Sale"}
         </Button>
       </form>
     </div>
