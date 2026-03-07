@@ -13,6 +13,7 @@ import SellItem from "./pages/SellItem";
 import TopperNotes from "./pages/TopperNotes";
 import Profile from "./pages/Profile";
 import Auth from "./pages/Auth";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,6 +36,7 @@ const App = () => (
                 <Route path="/notes" element={<TopperNotes />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/auth" element={<Auth />} />
+                <Route path="/messages" element={<Messages />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
