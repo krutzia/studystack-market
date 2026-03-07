@@ -1,13 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Plus, User, Menu, X, LogOut } from "lucide-react";
+import { ShoppingBag, Plus, User, Menu, X, LogOut, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, profile, signOut } = useAuth();
+  const unreadCount = useUnreadCount();
 
   const links = [
     { to: "/", label: "Home" },
