@@ -52,6 +52,17 @@ const Navbar = () => {
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <>
+              <Link to="/messages">
+                <Button variant="ghost" size="sm" className="gap-1.5 relative">
+                  <MessageCircle className="h-4 w-4" />
+                  Messages
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground text-[10px] min-w-[1.1rem] h-[1.1rem] flex items-center justify-center rounded-full px-1 py-0">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
               <Link to="/profile">
                 <Button variant="outline" size="sm" className="gap-1.5">
                   <User className="h-4 w-4" />
@@ -91,6 +102,16 @@ const Navbar = () => {
             ))}
             {user ? (
               <>
+                <Link to="/messages" onClick={() => setMobileOpen(false)}>
+                  <Button variant="ghost" className="w-full justify-start gap-2 relative">
+                    <MessageCircle className="h-4 w-4" /> Messages
+                    {unreadCount > 0 && (
+                      <Badge className="bg-destructive text-destructive-foreground text-[10px] min-w-[1.1rem] h-[1.1rem] flex items-center justify-center rounded-full px-1 py-0 ml-auto">
+                        {unreadCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
                 <Link to="/profile" onClick={() => setMobileOpen(false)}>
                   <Button variant="outline" className="w-full justify-start gap-2">
                     <User className="h-4 w-4" /> Profile
