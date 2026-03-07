@@ -20,6 +20,7 @@ export type Database = {
           id: string
           message_text: string
           product_id: string
+          read_at: string | null
           receiver_id: string
           sender_id: string
         }
@@ -28,6 +29,7 @@ export type Database = {
           id?: string
           message_text: string
           product_id: string
+          read_at?: string | null
           receiver_id: string
           sender_id: string
         }
@@ -36,6 +38,7 @@ export type Database = {
           id?: string
           message_text?: string
           product_id?: string
+          read_at?: string | null
           receiver_id?: string
           sender_id?: string
         }
