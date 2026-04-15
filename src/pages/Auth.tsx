@@ -27,7 +27,11 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    if (isSignUp && !email.endsWith("@jssaten.ac.in")) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedFullName = fullName.trim();
+    const normalizedPassword = password.trim();
+
+    if (isSignUp && !normalizedEmail.endsWith("@jssaten.ac.in")) {
       toast({
         title: "Invalid Email",
         description: "Please use your JSSATE college email (@jssaten.ac.in) to sign up.",
@@ -37,29 +41,55 @@ const Auth = () => {
       return;
     }
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: { full_name: fullName },
-          emailRedirectTo: window.location.origin,
-        },
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password: normalizedPassword,
+          options: {
+            data: { full_name: normalizedFullName },
+            emailRedirectTo: window.location.origin,
+          },
+        });
+
+        if (error) {
+          toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
+        } else {
+          toast({ title: "Check your email!", description: "We sent a verification link to your college email." });
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password: normalizedPassword,
+        });
+
+        if (error) {
+          const description =
+            error.message.toLowerCase().includes("email not confirmed")
+              ? "Please verify your email first, then try signing in again."
+              : error.message;
+
+          toast({ title: "Sign In Failed", description, variant: "destructive" });
+        } else {
+          navigate("/");
+        }
+      }
+    } catch (error) {
+      const message =
+        error instanceof Error && error.message.toLowerCase().includes("failed to fetch")
+          ? "Cannot reach the authentication server. Check your VITE_SUPABASE_URL, publishable key, internet connection, and that the Supabase project is still active."
+          : error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.";
+
+      toast({
+        title: isSignUp ? "Sign Up Failed" : "Sign In Failed",
+        description: message,
+        variant: "destructive",
       });
-      if (error) {
-        toast({ title: "Sign Up Failed", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Check your email!", description: "We sent a verification link to your college email." });
-      }
-    } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        toast({ title: "Sign In Failed", description: error.message, variant: "destructive" });
-      } else {
-        navigate("/");
-      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -94,22 +124,22 @@ const Auth = () => {
             )}
             <div className="relative">
               <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="email"
-                placeholder={isSignUp ? "yourname@jssaten.ac.in" : "Email address"}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                <Input
+                  type="email"
+                  placeholder={isSignUp ? "yourname@jssaten.ac.in" : "Email address"}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 className="pl-10"
                 required
               />
             </div>
             <div className="relative">
               <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 className="pl-10"
                 required
                 minLength={6}
