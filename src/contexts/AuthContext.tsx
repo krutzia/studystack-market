@@ -22,12 +22,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<AuthContextType["profile"]>(null);
   const [loading, setLoading] = useState(true);
 
+  const createProfileIfMissing = async (currentUser: User) => {
+    const fallbackProfile = {
+      user_id: currentUser.id,
+      full_name: (currentUser.user_metadata?.full_name as string | undefined) ?? null,
+      college_email: currentUser.email ?? null,
+      verified: currentUser.email?.endsWith("@jssaten.ac.in") ?? false,
+    };
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .upsert(fallbackProfile, { onConflict: "user_id" })
+      .select("full_name, verified, college_email")
+      .single();
+
+    if (!error) {
+      setProfile(data);
+    }
+  };
+
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("profiles")
       .select("full_name, verified, college_email")
       .eq("user_id", userId)
       .single();
+
+    if (error) {
+      const currentUser = supabase.auth.getUser ? (await supabase.auth.getUser()).data.user : null;
+      if (error.code === "PGRST116" && currentUser?.id === userId) {
+        await createProfileIfMissing(currentUser);
+        return;
+      }
+
+      setProfile(null);
+      return;
+    }
+
     setProfile(data);
   };
 
