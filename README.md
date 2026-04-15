@@ -207,6 +207,15 @@ supabase/
 - Realtime buyer-seller messaging
 - Clean UI focused on student buying and selling
 
+---
+
+## Live Demo
+
+Try the app here:  
+https://studystack-market-rgrk2nuyd-krutzias-projects.vercel.app
+
+---
+
 ## Author
 
 Kashish  
