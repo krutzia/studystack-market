@@ -78,7 +78,7 @@ export const mockProducts: Product[] = [
     originalPrice: 900,
     category: "Hostel Items",
     condition: "Used",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1534126511673-b6899657816a?w=400&h=300&fit=crop",
     seller: { name: "Amit Kumar", avatar: "AK", rating: 4.0, verified: true, college: "JSSATE" },
     postedAt: "1 week ago",
   },
