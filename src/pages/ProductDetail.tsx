@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
+import { mockProducts } from "@/lib/mockData";
 
 interface ProductData {
   id: string;
@@ -25,6 +26,30 @@ interface ProductData {
   } | null;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const mockToProductData = (id?: string): ProductData => {
+  const m = (id && mockProducts.find((p) => p.id === id)) || mockProducts[0];
+  return {
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    price: m.price,
+    original_price: m.originalPrice ?? null,
+    category: m.category,
+    condition: m.condition,
+    image_url: m.image,
+    user_id: null,
+    created_at: new Date().toISOString(),
+    profiles: {
+      full_name: m.seller.name,
+      verified: m.seller.verified,
+      rating: m.seller.rating,
+      college: m.seller.college,
+    },
+  };
+};
+
 const ProductDetail = () => {
   const { id } = useParams();
   const [product, setProduct] = useState<ProductData | null>(null);
@@ -32,17 +57,20 @@ const ProductDetail = () => {
   const { isFavorite, toggle } = useFavorites();
 
   useEffect(() => {
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("*, profiles!products_user_id_fkey(full_name, verified, rating, college)")
-        .eq("id", id!)
-        .single() as { data: ProductData | null };
-
-      setProduct(data);
+    const run = async () => {
+      if (id && UUID_RE.test(id)) {
+        const { data } = await supabase
+          .from("products")
+          .select("*, profiles!products_user_id_fkey(full_name, verified, rating, college)")
+          .eq("id", id)
+          .maybeSingle() as { data: ProductData | null };
+        setProduct(data ?? mockToProductData(id));
+      } else {
+        setProduct(mockToProductData(id));
+      }
       setLoading(false);
     };
-    if (id) fetch();
+    run();
   }, [id]);
 
   if (loading) {
