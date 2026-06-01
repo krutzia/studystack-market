@@ -31,7 +31,7 @@ export const mockProducts: Product[] = [
     originalPrice: 550,
     category: "Books",
     condition: "Used",
-    image: "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1589998059171-988d887df646?w=400&h=300&fit=crop",
     seller: { name: "Arjun Sharma", avatar: "AS", rating: 4.5, verified: true, college: "JSSATE" },
     postedAt: "2 hours ago",
   },
