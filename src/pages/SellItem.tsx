@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Upload, Sparkles, X, ImageIcon } from "lucide-react";
+import { Sparkles, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,16 +7,23 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
+const getGuestId = () => {
+  let id = localStorage.getItem("guest_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("guest_id", id);
+  }
+  return id;
+};
+
 const SellItem = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,12 +90,6 @@ const SellItem = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
-      toast({ title: "Please sign in to sell items", variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
-
     if (!name || !price || !category || !condition) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
@@ -96,12 +97,12 @@ const SellItem = () => {
 
     setSubmitting(true);
     let imageUrl: string | null = null;
+    const guestId = getGuestId();
 
     try {
-      // Upload image if selected
       if (imageFile) {
         const ext = imageFile.name.split(".").pop();
-        const filePath = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const filePath = `${guestId}/${crypto.randomUUID()}.${ext}`;
         const { error: uploadError } = await supabase.storage
           .from("product-images")
           .upload(filePath, imageFile);
@@ -114,9 +115,8 @@ const SellItem = () => {
         imageUrl = urlData.publicUrl;
       }
 
-      // Insert product
       const { error: insertError } = await supabase.from("products" as any).insert({
-        user_id: user.id,
+        user_id: null,
         name,
         description,
         price: parseFloat(price),
@@ -143,7 +143,6 @@ const SellItem = () => {
       <p className="mt-1 text-muted-foreground">List your item for students at JSSATE</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-        {/* Image Upload */}
         <div>
           <Label>Product Image</Label>
           <input

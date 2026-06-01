@@ -1,11 +1,10 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, MessageCircle, Star, Tag } from "lucide-react";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeft, BadgeCheck, Heart, Star, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import ChatDialog from "@/components/ChatDialog";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface ProductData {
   id: string;
@@ -16,7 +15,7 @@ interface ProductData {
   category: string;
   condition: string;
   image_url: string | null;
-  user_id: string;
+  user_id: string | null;
   created_at: string;
   profiles: {
     full_name: string | null;
@@ -28,11 +27,9 @@ interface ProductData {
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [chatOpen, setChatOpen] = useState(false);
+  const { isFavorite, toggle } = useFavorites();
 
   useEffect(() => {
     const fetch = async () => {
@@ -73,15 +70,7 @@ const ProductDetail = () => {
 
   const sellerName = product.profiles?.full_name || "Anonymous";
   const sellerInitials = sellerName.split(" ").map((n) => n[0]).join("").slice(0, 2);
-  const isOwnProduct = user?.id === product.user_id;
-
-  const handleChatClick = () => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    setChatOpen(true);
-  };
+  const fav = isFavorite(product.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -134,7 +123,6 @@ const ProductDetail = () => {
             </p>
           )}
 
-          {/* Seller */}
           <div className="mt-8 rounded-xl border border-border bg-muted/50 p-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Seller</p>
             <div className="mt-2 flex items-center gap-3">
@@ -155,11 +143,9 @@ const ProductDetail = () => {
           </div>
 
           <div className="mt-6 flex gap-3">
-            {!isOwnProduct && (
-              <Button size="lg" className="flex-1 gap-2" onClick={handleChatClick}>
-                <MessageCircle className="h-4 w-4" /> Message Seller
-              </Button>
-            )}
+            <Button size="lg" className="flex-1 gap-2" onClick={() => toggle(product.id)} variant={fav ? "default" : "outline"}>
+              <Heart className={`h-4 w-4 ${fav ? "fill-current" : ""}`} /> {fav ? "Saved" : "Save to Favorites"}
+            </Button>
             <Button size="lg" variant="outline" className="flex-1">
               Make an Offer
             </Button>
@@ -169,18 +155,6 @@ const ProductDetail = () => {
           </p>
         </div>
       </div>
-
-      {/* Chat Dialog */}
-      {user && !isOwnProduct && (
-        <ChatDialog
-          open={chatOpen}
-          onOpenChange={setChatOpen}
-          productId={product.id}
-          productName={product.name}
-          sellerId={product.user_id}
-          sellerName={sellerName}
-        />
-      )}
     </div>
   );
 };
