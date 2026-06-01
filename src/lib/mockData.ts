@@ -54,7 +54,7 @@ export const mockProducts: Product[] = [
     price: 150,
     category: "Notes",
     condition: "New",
-    image: "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=400&h=300&fit=crop",
+    image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=400&h=300&fit=crop",
     seller: { name: "Rahul Verma", avatar: "RV", rating: 4.9, verified: true, college: "JSSATE" },
     postedAt: "1 day ago",
   },
