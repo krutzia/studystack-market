@@ -78,7 +78,7 @@ export type Database = {
           original_price: number | null
           price: number
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           category?: string
@@ -91,7 +91,7 @@ export type Database = {
           original_price?: number | null
           price: number
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           category?: string
@@ -104,7 +104,7 @@ export type Database = {
           original_price?: number | null
           price?: number
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
