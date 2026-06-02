@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Star, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Product } from "@/lib/mockData";
+import { getFallbackImage, type Product } from "@/lib/mockData";
 
 const ProductCard = ({ product }: { product: Product }) => {
   return (
