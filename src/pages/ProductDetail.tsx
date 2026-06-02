@@ -109,17 +109,38 @@ const ProductDetail = () => {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="overflow-hidden rounded-2xl border border-border">
-          <img
-            src={product.image_url || getFallbackImage(product.category)}
-            alt={product.name}
-            className="h-full w-full object-cover aspect-[4/3]"
-            onError={(e) => {
-              const img = e.currentTarget;
-              const fb = getFallbackImage(product.category);
-              if (img.src !== fb) img.src = fb;
-            }}
-          />
+          {(() => {
+            const initial = product.image_url || getFallbackImage(product.category);
+            const r = getResponsiveImage(initial, {
+              widths: [480, 640, 800, 1024, 1280, 1600],
+              sizes: "(max-width: 1024px) 100vw, 50vw",
+              aspect: 4 / 3,
+            });
+            return (
+              <img
+                src={r.src}
+                srcSet={r.srcSet}
+                sizes={r.sizes}
+                alt={product.name}
+                width={1024}
+                height={768}
+                className="h-full w-full object-cover aspect-[4/3]"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  const fb = getFallbackImage(product.category);
+                  if (img.src !== fb) {
+                    img.srcset = "";
+                    img.src = fb;
+                  }
+                }}
+              />
+            );
+          })()}
         </div>
+
 
         <div>
           <div className="flex flex-wrap gap-2">
