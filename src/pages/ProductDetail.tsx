@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
-import { mockProducts } from "@/lib/mockData";
+import { mockProducts, getFallbackImage } from "@/lib/mockData";
 
 interface ProductData {
   id: string;
