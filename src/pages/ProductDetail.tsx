@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
 import { mockProducts, getFallbackImage } from "@/lib/mockData";
+import { getResponsiveImage } from "@/lib/responsiveImage";
 
 interface ProductData {
   id: string;
