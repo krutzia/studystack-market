@@ -11,10 +11,15 @@ const ProductCard = ({ product }: { product: Product }) => {
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={product.image}
+          src={product.image || getFallbackImage(product.category)}
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          onError={(e) => {
+            const img = e.currentTarget;
+            const fb = getFallbackImage(product.category);
+            if (img.src !== fb) img.src = fb;
+          }}
         />
         <Badge className="absolute left-3 top-3 bg-primary text-primary-foreground">
           {product.category}
