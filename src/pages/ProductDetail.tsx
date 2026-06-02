@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useFavorites } from "@/hooks/useFavorites";
-import { mockProducts } from "@/lib/mockData";
+import { mockProducts, getFallbackImage } from "@/lib/mockData";
 
 interface ProductData {
   id: string;
@@ -109,9 +109,14 @@ const ProductDetail = () => {
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="overflow-hidden rounded-2xl border border-border">
           <img
-            src={product.image_url || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop"}
+            src={product.image_url || getFallbackImage(product.category)}
             alt={product.name}
             className="h-full w-full object-cover aspect-[4/3]"
+            onError={(e) => {
+              const img = e.currentTarget;
+              const fb = getFallbackImage(product.category);
+              if (img.src !== fb) img.src = fb;
+            }}
           />
         </div>
 
