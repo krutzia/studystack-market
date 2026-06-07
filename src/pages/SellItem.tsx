@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from "react";
-import { Upload, Sparkles, X, ImageIcon } from "lucide-react";
+import { Sparkles, X, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,15 @@ import { useNavigate } from "react-router-dom";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+
+const getGuestId = () => {
+  let id = localStorage.getItem("guest_id");
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem("guest_id", id);
+  }
+  return id;
+};
 
 const SellItem = () => {
   const { toast } = useToast();
@@ -81,8 +90,7 @@ const SellItem = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Auth removed — allow anonymous postings for demo
-
+  // Auth removed — allow anonymous postings for demo
     if (!name || !price || !category || !condition) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
@@ -129,7 +137,6 @@ const SellItem = () => {
       <p className="mt-1 text-muted-foreground">List your item for students at JSSATE</p>
 
       <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-        {/* Image Upload */}
         <div>
           <Label>Product Image</Label>
           <input

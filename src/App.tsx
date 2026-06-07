@@ -23,22 +23,21 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <div className="flex min-h-screen flex-col">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/marketplace" element={<Marketplace />} />
-                <Route path="/product/:id" element={<ProductDetail />} />
-                <Route path="/sell" element={<SellItem />} />
-                <Route path="/notes" element={<TopperNotes />} />
-                <Route path="/profile" element={<Profile />} />
-                
-                <Route path="/messages" element={<Messages />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </main>
-            <Footer />
-          </div>
+          <Navbar />
+          <main className="flex-1">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
+              <Route path="/sell" element={<SellItem />} />
+              <Route path="/notes" element={<TopperNotes />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/messages" element={<Messages />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

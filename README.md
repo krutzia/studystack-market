@@ -2,7 +2,7 @@
 
 StudyStack Market, branded in the app as CampusKart, is a campus-focused marketplace built for students to buy and sell books, notes, gadgets, calculators, hostel items, and other essentials within their college community.
 
-The app is designed around a trusted student network. Users can sign up with a college email, browse listings, post items for sale, message sellers in real time, and explore premium topper notes in a clean, modern interface.
+The app is designed around a trusted student network. For this demo, authentication and real-time chat are disabled; the UI demonstrates browsing, listing, and viewing product details with a polished interface.
 
 ## Features
 
@@ -17,7 +17,6 @@ The app is designed around a trusted student network. Users can sign up with a c
 
 - Post new listings with product name, description, category, price, and condition
 - Upload product images with validation for JPG, PNG, and WebP files
- - Upload product images with validation for JPG, PNG, and WebP files
 - Generate a quick AI-style item description for faster posting
 
 ### Student Messaging
@@ -44,7 +43,6 @@ This demo does not require authentication. Browsing and posting are available wi
 You can add screenshots here later for sections like:
 
 - Landing Page
-- Authentication
 - Marketplace
 - Product Detail
 - Sell Item
@@ -126,28 +124,6 @@ npm run dev
 
 Open the local URL shown in the terminal, usually `http://localhost:5173`.
 
-### Local development with Vercel functions
-
-To run the frontend and emulate serverless APIs locally with Vercel:
-
-```bash
-# install deps
-npm install
-
-# start Vite (frontend) and Vercel functions locally together
-npx vercel dev
-
-# OR run vite dev and a separate local server if preferred
-npm run dev
-```
-
-Typical flow:
-
-- Browse the marketplace
-- Open a product page
-- Post a new item for sale (anonymous demo)
-- Explore topper notes
-
 ### 5. Build for Production
 
 ```bash
@@ -193,16 +169,22 @@ api/
     [id].js
   notes/
     index.js
-
 ```
-
-## Highlights
 
 ## Highlights
 
 - Marketplace and Topper Notes backed by serverless APIs and MongoDB Atlas
 - Image upload (stored as data URLs in demo; swap to Cloudinary/S3 for production)
 - Clean UI focused on student buying and selling
+
+---
+
+## Live Demo
+
+Try the app here:  
+https://studystack-market-rgrk2nuyd-krutzias-projects.vercel.app
+
+---
 
 ## Author
 

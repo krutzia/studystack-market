@@ -1,9 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, BadgeCheck, MessageCircle, Star, Tag } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Heart, Star, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import api from "@/lib/api";
+import { useFavorites } from "@/hooks/useFavorites";
+import { mockProducts, getFallbackImage } from "@/lib/mockData";
+import { getResponsiveImage } from "@/lib/responsiveImage";
 
 interface ProductData {
   id: string;
@@ -14,7 +17,7 @@ interface ProductData {
   category: string;
   condition: string;
   image_url: string | null;
-  user_id: string;
+  user_id: string | null;
   created_at: string;
   profiles: {
     full_name: string | null;
@@ -24,25 +27,53 @@ interface ProductData {
   } | null;
 }
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const mockToProductData = (id?: string): ProductData => {
+  const m = (id && mockProducts.find((p) => p.id === id)) || mockProducts[0];
+  return {
+    id: m.id,
+    name: m.name,
+    description: m.description,
+    price: m.price,
+    original_price: m.originalPrice ?? null,
+    category: m.category,
+    condition: m.condition,
+    image_url: m.image,
+    user_id: null,
+    created_at: new Date().toISOString(),
+    profiles: {
+      full_name: m.seller.name,
+      verified: m.seller.verified,
+      rating: m.seller.rating,
+      college: m.seller.college,
+    },
+  };
+};
+
 const ProductDetail = () => {
   const { id } = useParams();
   // Auth removed — browsing allowed without login
   const navigate = useNavigate();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [chatOpen, setChatOpen] = useState(false);
+  const { isFavorite, toggle } = useFavorites();
 
   useEffect(() => {
     const fetch = async () => {
       try {
-        const resp = await api.get(`/products/${id}`);
-        setProduct(resp.data || null);
+        if (id && UUID_RE.test(id)) {
+          const resp = await api.get(`/products/${id}`);
+          setProduct(resp.data || mockToProductData(id));
+        } else {
+          setProduct(mockToProductData(id));
+        }
       } catch (e) {
-        setProduct(null);
+        setProduct(mockToProductData(id));
       }
       setLoading(false);
     };
-    if (id) fetch();
+    fetch();
   }, [id]);
 
   if (loading) {
@@ -70,12 +101,7 @@ const ProductDetail = () => {
 
   const sellerName = product.profiles?.full_name || "Anonymous";
   const sellerInitials = sellerName.split(" ").map((n) => n[0]).join("").slice(0, 2);
-  const isOwnProduct = false;
-
-  const handleChatClick = () => {
-    // Auth removed — navigate to messages page (non-auth demo)
-    navigate("/messages");
-  };
+  const fav = isFavorite(product.id);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -85,12 +111,38 @@ const ProductDetail = () => {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <div className="overflow-hidden rounded-2xl border border-border">
-          <img
-            src={product.image_url || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop"}
-            alt={product.name}
-            className="h-full w-full object-cover aspect-[4/3]"
-          />
+          {(() => {
+            const initial = product.image_url || getFallbackImage(product.category);
+            const r = getResponsiveImage(initial, {
+              widths: [480, 640, 800, 1024, 1280, 1600],
+              sizes: "(max-width: 1024px) 100vw, 50vw",
+              aspect: 4 / 3,
+            });
+            return (
+              <img
+                src={r.src}
+                srcSet={r.srcSet}
+                sizes={r.sizes}
+                alt={product.name}
+                width={1024}
+                height={768}
+                className="h-full w-full object-cover aspect-[4/3]"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                onError={(e) => {
+                  const img = e.currentTarget;
+                  const fb = getFallbackImage(product.category);
+                  if (img.src !== fb) {
+                    img.srcset = "";
+                    img.src = fb;
+                  }
+                }}
+              />
+            );
+          })()}
         </div>
+
 
         <div>
           <div className="flex flex-wrap gap-2">
@@ -128,7 +180,6 @@ const ProductDetail = () => {
             </p>
           )}
 
-          {/* Seller */}
           <div className="mt-8 rounded-xl border border-border bg-muted/50 p-4">
             <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Seller</p>
             <div className="mt-2 flex items-center gap-3">
@@ -149,11 +200,9 @@ const ProductDetail = () => {
           </div>
 
           <div className="mt-6 flex gap-3">
-            {!isOwnProduct && (
-              <Button size="lg" className="flex-1 gap-2" onClick={handleChatClick}>
-                <MessageCircle className="h-4 w-4" /> Message Seller
-              </Button>
-            )}
+            <Button size="lg" className="flex-1 gap-2" onClick={() => toggle(product.id)} variant={fav ? "default" : "outline"}>
+              <Heart className={`h-4 w-4 ${fav ? "fill-current" : ""}`} /> {fav ? "Saved" : "Save to Favorites"}
+            </Button>
             <Button size="lg" variant="outline" className="flex-1">
               Make an Offer
             </Button>
@@ -163,8 +212,7 @@ const ProductDetail = () => {
           </p>
         </div>
       </div>
-
-      {/* Chat removed — messaging is not functional in demo backend */}
+  {/* Chat removed — messaging is not functional in demo backend */}
     </div>
   );
 };

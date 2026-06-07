@@ -1,9 +1,17 @@
 import { Link } from "react-router-dom";
 import { Star, BadgeCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { Product } from "@/lib/mockData";
+import { getFallbackImage, type Product } from "@/lib/mockData";
+import { getResponsiveImage } from "@/lib/responsiveImage";
 
 const ProductCard = ({ product }: { product: Product }) => {
+  const initial = product.image || getFallbackImage(product.category);
+  const responsive = getResponsiveImage(initial, {
+    widths: [240, 360, 480, 640, 800],
+    sizes: "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+    aspect: 4 / 3,
+  });
+
   return (
     <Link
       to={`/product/${product.id}`}
@@ -11,10 +19,23 @@ const ProductCard = ({ product }: { product: Product }) => {
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <img
-          src={product.image}
+          src={responsive.src}
+          srcSet={responsive.srcSet}
+          sizes={responsive.sizes}
           alt={product.name}
+          width={640}
+          height={480}
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
+          onError={(e) => {
+            const img = e.currentTarget;
+            const fb = getFallbackImage(product.category);
+            if (img.src !== fb) {
+              img.srcset = "";
+              img.src = fb;
+            }
+          }}
         />
         <Badge className="absolute left-3 top-3 bg-primary text-primary-foreground">
           {product.category}

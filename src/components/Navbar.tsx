@@ -1,7 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { ShoppingBag, Plus, User, Menu, X, LogOut, MessageCircle } from "lucide-react";
+import { ShoppingBag, Plus, User, Menu, X, MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 
 const Navbar = () => {
