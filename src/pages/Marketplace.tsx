@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ProductCard from "@/components/ProductCard";
 import { mockProducts, categories, type Category, type Product } from "@/lib/mockData";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 
 const Marketplace = () => {
   const [search, setSearch] = useState("");
@@ -13,31 +13,30 @@ const Marketplace = () => {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      const { data: products } = await supabase
-        .from("products" as any)
-        .select("*, profiles!products_user_id_fkey(full_name, verified, rating, avatar_url, college)")
-        .order("created_at", { ascending: false }) as any;
-
-      if (products) {
+      try {
+        const resp = await api.get("/products");
+        const products = resp.data || [];
         const mapped: Product[] = products.map((p: any) => ({
-          id: p.id,
+          id: p._id || p.id,
           name: p.name,
           description: p.description || "",
           price: p.price,
-          originalPrice: p.original_price,
+          originalPrice: p.original_price || p.originalPrice || null,
           category: p.category as Category,
           condition: p.condition,
-          image: p.image_url || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop",
+          image: p.image_url || p.image || "https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=400&h=300&fit=crop",
           seller: {
-            name: p.profiles?.full_name || "Anonymous",
-            avatar: (p.profiles?.full_name || "A").split(" ").map((n: string) => n[0]).join("").slice(0, 2),
-            rating: p.profiles?.rating || 0,
-            verified: p.profiles?.verified || false,
-            college: p.profiles?.college || "JSSATE",
+            name: p.seller?.name || p.profiles?.full_name || "Anonymous",
+            avatar: (p.seller?.name || p.profiles?.full_name || "A").split(" ").map((n: string) => n[0]).join("").slice(0, 2),
+            rating: p.seller?.rating || p.profiles?.rating || 0,
+            verified: p.seller?.verified || p.profiles?.verified || false,
+            college: p.seller?.college || p.profiles?.college || "JSSATE",
           },
-          postedAt: new Date(p.created_at).toLocaleDateString(),
+          postedAt: new Date(p.created_at || p.createdAt).toLocaleDateString(),
         }));
         setDbProducts(mapped);
+      } catch (err) {
+        // ignore, fall back to mock products
       }
     };
     fetchProducts();

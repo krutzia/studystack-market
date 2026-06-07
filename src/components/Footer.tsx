@@ -40,7 +40,7 @@ const Footer = () => (
       </div>
 
       <div className="mt-6 border-t border-border/60 pt-4 text-sm text-muted-foreground">
-        <p>&copy; 2026 MyBrand</p>
+        <p>© 2026 Krutzia. All rights reserved.</p>
       </div>
     </div>
   </footer>

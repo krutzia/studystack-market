@@ -3,9 +3,7 @@ import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, BadgeCheck, MessageCircle, Star, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import ChatDialog from "@/components/ChatDialog";
+import api from "@/lib/api";
 
 interface ProductData {
   id: string;
@@ -28,7 +26,7 @@ interface ProductData {
 
 const ProductDetail = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  // Auth removed — browsing allowed without login
   const navigate = useNavigate();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -36,13 +34,12 @@ const ProductDetail = () => {
 
   useEffect(() => {
     const fetch = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("*, profiles!products_user_id_fkey(full_name, verified, rating, college)")
-        .eq("id", id!)
-        .single() as { data: ProductData | null };
-
-      setProduct(data);
+      try {
+        const resp = await api.get(`/products/${id}`);
+        setProduct(resp.data || null);
+      } catch (e) {
+        setProduct(null);
+      }
       setLoading(false);
     };
     if (id) fetch();
@@ -73,14 +70,11 @@ const ProductDetail = () => {
 
   const sellerName = product.profiles?.full_name || "Anonymous";
   const sellerInitials = sellerName.split(" ").map((n) => n[0]).join("").slice(0, 2);
-  const isOwnProduct = user?.id === product.user_id;
+  const isOwnProduct = false;
 
   const handleChatClick = () => {
-    if (!user) {
-      navigate("/auth");
-      return;
-    }
-    setChatOpen(true);
+    // Auth removed — navigate to messages page (non-auth demo)
+    navigate("/messages");
   };
 
   return (
@@ -170,17 +164,7 @@ const ProductDetail = () => {
         </div>
       </div>
 
-      {/* Chat Dialog */}
-      {user && !isOwnProduct && (
-        <ChatDialog
-          open={chatOpen}
-          onOpenChange={setChatOpen}
-          productId={product.id}
-          productName={product.name}
-          sellerId={product.user_id}
-          sellerName={sellerName}
-        />
-      )}
+      {/* Chat removed — messaging is not functional in demo backend */}
     </div>
   );
 };

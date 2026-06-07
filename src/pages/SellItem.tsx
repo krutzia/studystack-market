@@ -7,8 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { categories } from "@/lib/mockData";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
+import api from "@/lib/api";
 import { useNavigate } from "react-router-dom";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -16,7 +15,6 @@ const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const SellItem = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -83,11 +81,7 @@ const SellItem = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
-      toast({ title: "Please sign in to sell items", variant: "destructive" });
-      navigate("/auth");
-      return;
-    }
+    // Auth removed — allow anonymous postings for demo
 
     if (!name || !price || !category || !condition) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
@@ -95,43 +89,35 @@ const SellItem = () => {
     }
 
     setSubmitting(true);
-    let imageUrl: string | null = null;
-
     try {
-      // Upload image if selected
+      let imageBase64: string | null = null;
       if (imageFile) {
-        const ext = imageFile.name.split(".").pop();
-        const filePath = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error: uploadError } = await supabase.storage
-          .from("product-images")
-          .upload(filePath, imageFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data: urlData } = supabase.storage
-          .from("product-images")
-          .getPublicUrl(filePath);
-        imageUrl = urlData.publicUrl;
+        const reader = await new Promise<string>((res, rej) => {
+          const r = new FileReader();
+          r.onload = () => res(String(r.result));
+          r.onerror = rej;
+          r.readAsDataURL(imageFile);
+        });
+        imageBase64 = reader;
       }
 
-      // Insert product
-      const { error: insertError } = await supabase.from("products" as any).insert({
-        user_id: user.id,
+      await api.post('/products', {
         name,
         description,
         price: parseFloat(price),
         original_price: null,
         category,
         condition,
-        image_url: imageUrl,
-      } as any);
-
-      if (insertError) throw insertError;
+        image: imageBase64,
+        seller: {
+          name: 'Anonymous',
+        }
+      });
 
       toast({ title: "🎉 Item posted successfully!", description: "Your item is now live on the marketplace." });
       navigate("/marketplace");
     } catch (err: any) {
-      toast({ title: "Error posting item", description: err.message, variant: "destructive" });
+      toast({ title: "Error posting item", description: err?.message || String(err), variant: "destructive" });
     } finally {
       setSubmitting(false);
     }

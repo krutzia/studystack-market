@@ -3,14 +3,11 @@ import { ShoppingBag, Plus, User, Menu, X, LogOut, MessageCircle } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useUnreadCount } from "@/hooks/useUnreadCount";
 
 const Navbar = () => {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { user, profile, signOut } = useAuth();
-  const unreadCount = useUnreadCount();
+  // Auth removed — browsing without login
 
   const links = [
     { to: "/", label: "Home" },
@@ -54,37 +51,18 @@ const Navbar = () => {
         </div>
 
         <div className="hidden items-center gap-2 md:flex">
-          {user ? (
-            <>
-              <Link to="/messages">
-                <Button variant="ghost" size="sm" className="relative gap-1.5">
-                  <MessageCircle className="h-4 w-4" />
-                  Messages
-                  {unreadCount > 0 && (
-                    <Badge className="absolute -right-1 -top-1 flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 py-0 text-[10px] text-destructive-foreground">
-                      {unreadCount > 99 ? "99+" : unreadCount}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
-              <Link to="/profile">
-                <Button variant="outline" size="sm" className="gap-1.5">
-                  <User className="h-4 w-4" />
-                  {profile?.full_name || "Profile"}
-                </Button>
-              </Link>
-              <Button size="sm" variant="ghost" onClick={signOut} className="gap-1.5">
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </>
-          ) : (
-            <Link to="/auth">
-              <Button size="sm" className="gap-1.5">
-                Sign In
-              </Button>
-            </Link>
-          )}
+          <Link to="/messages">
+            <Button variant="ghost" size="sm" className="gap-1.5">
+              <MessageCircle className="h-4 w-4" />
+              Messages
+            </Button>
+          </Link>
+          <Link to="/profile">
+            <Button variant="outline" size="sm" className="gap-1.5">
+              <User className="h-4 w-4" />
+              Profile
+            </Button>
+          </Link>
         </div>
 
         <button
@@ -111,42 +89,18 @@ const Navbar = () => {
                 </Button>
               </Link>
             ))}
-            {user ? (
-              <>
-                <Link to="/messages" onClick={() => setMobileOpen(false)}>
-                  <Button variant="ghost" className="relative w-full justify-start gap-2">
-                    <MessageCircle className="h-4 w-4" />
-                    Messages
-                    {unreadCount > 0 && (
-                      <Badge className="ml-auto flex h-[1.1rem] min-w-[1.1rem] items-center justify-center rounded-full bg-destructive px-1 py-0 text-[10px] text-destructive-foreground">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </Badge>
-                    )}
-                  </Button>
-                </Link>
-                <Link to="/profile" onClick={() => setMobileOpen(false)}>
-                  <Button variant="outline" className="w-full justify-start gap-2">
-                    <User className="h-4 w-4" />
-                    Profile
-                  </Button>
-                </Link>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start gap-2"
-                  onClick={() => {
-                    signOut();
-                    setMobileOpen(false);
-                  }}
-                >
-                  <LogOut className="h-4 w-4" />
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <Link to="/auth" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full justify-start gap-2">Sign In</Button>
-              </Link>
-            )}
+            <Link to="/messages" onClick={() => setMobileOpen(false)}>
+              <Button variant="ghost" className="w-full justify-start gap-2">
+                <MessageCircle className="h-4 w-4" />
+                Messages
+              </Button>
+            </Link>
+            <Link to="/profile" onClick={() => setMobileOpen(false)}>
+              <Button variant="outline" className="w-full justify-start gap-2">
+                <User className="h-4 w-4" />
+                Profile
+              </Button>
+            </Link>
           </div>
         </div>
       )}
